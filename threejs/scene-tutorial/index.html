@@ -7,6 +7,7 @@
   <title>Scene Tutorial</title>
   <style>
     * { margin: 0;padding: 0;box-sizing: border-box; }
+    canvas {width: 100% !important; height: 100% !important;}
   </style>
 </head>
 <body>
@@ -38,7 +39,28 @@
       cube.rotation.x += 0.01;
 			cube.rotation.y += 0.01;
 
+      // canvas resizing
+      if (resizeRendererToDisplaySize(renderer)) {
+        const canvas = renderer.domElement;
+        camera.aspect = canvas.clientWidth / canvas.clientHeight;
+        camera.updateProjectionMatrix();
+      }
+
       renderer.render( scene, camera );
+    }
+
+    // Resize canvas function
+    function resizeRendererToDisplaySize(renderer) {
+      const canvas = renderer.domElement;
+      const pixelRatio = window.devicePixelRatio;
+      const width  = canvas.clientWidth  * pixelRatio | 0;
+      const height = canvas.clientHeight * pixelRatio | 0;
+      const needResize = canvas.width !== width || canvas.height !== height;
+
+      if (needResize) {
+        renderer.setSize(width, height, false);
+      }
+      return needResize;
     }
 
     animate();
