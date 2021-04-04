@@ -1,4 +1,23 @@
-# Three.js
+# threejs
+three.js
 
-Javascript 3D Library
-사용하기 쉽고, 가볍고, 크로스 브라우징 지원하는 다용도의 3D library가 목표라 한다.
+## Camera
+
+
+### FOV (field of view)
+시야각
+
+### Aspect Ratio
+가로세로비 (width / height)
+
+### near (default 0.1)
+렌더링 시작 부분
+
+### far (default 2000)
+렌더링 마지막 부분
+
+ThreeJS는 near ~ far까지의 부분만 렌더하고 나머지 부분은 렌더링 안함
+
+-----
+
+## Renderer
