@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Responsive Tutorial</title>
+  <style>
+    * { margin: 0;padding: 0;box-sizing: border-box; }
+    html, body {
+      width: 100%;
+      height: 100%;
+    }
+    #c {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="c"></canvas>
+  <script type="module">
+    import * as THREE from 'https://threejsfundamentals.org/threejs/resources/threejs/r127/build/three.module.js';
+
+    const getCamera = () => {
+      const fov = 75; // field of view(시야각)의 줄임말, Three.js는 대부분이 radians를 받지만 원근 카메라만 특이하게 degrees를 받는다.
+      const aspect = 2;  // canvas의 가로 세로 비율
+      const near = 0.1; // near과 far은 카메라 앞에 렌더링되는 공간 범위를 지정하는 요소, 이 공간 외의 요소들은 화면에서 잘려나가고 렌더링되지 않는다.
+      const far = 5;
+
+      const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
+
+      camera.position.z = 2;
+
+      return camera;
+    }
+
+    const getBoxGeometry = () => {
+      const boxWidth = 1;
+      const boxHeight = 1;
+      const boxDepth = 1;
+
+      const geometry = new THREE.BoxGeometry(boxWidth, boxHeight, boxDepth);
+
+      return geometry;
+    }
+
+    const getCube = () => {
+      const geometry = getBoxGeometry();
+      const material = new THREE.MeshPhongMaterial({ color: 0x44aa88 });
+
+      const cube = new THREE.Mesh(geometry, material);
+
+      return cube;
+    }
+
+    const getLight = () => {
+      const color = 0xffffff;
+      const intensity = 1;
+
+      const light = new THREE.DirectionalLight(color, intensity);
+
+      light.position.set(-1, 2, 4);
+
+      return light;
+    }
+
+    const makeInstance = (color, x) => {
+      const geometry = getBoxGeometry();
+
+      const material = new THREE.MeshPhongMaterial({color});
+
+      const cube = new THREE.Mesh(geometry, material);
+
+      cube.position.x = x;
+
+      return cube;
+    }
+
+    function resizeRendererToDisplaySize(renderer) {
+      const canvas = renderer.domElement;
+      const pixelRatio = window.devicePixelRatio;
+      const width  = canvas.clientWidth * pixelRatio | 0;
+      const height = canvas.clientHeight * pixelRatio | 0;
+      const needResize = canvas.width !== width || canvas.height !== height;
+
+      if (needResize) {
+        renderer.setSize(width, height, false); // renderer 사이즈를 수정해줌
+      }
+
+      return needResize;
+    }
+
+    const main = () => {
+      const canvas = document.querySelector('#c');
+
+      const renderer = new THREE.WebGLRenderer({ canvas }); // canvas를 넘겨주지 않으면 자동으로 생성해주고 직접 document에 canvas를 삽입해줘야 함
+
+      const camera = getCamera();
+      const scene = new THREE.Scene();
+
+      const cubes = [
+        makeInstance(0x44aa88,  0),
+        makeInstance(0x8844aa, -2),
+        makeInstance(0xaa8844,  2),
+      ];
+
+      const light = getLight();
+
+      cubes.forEach(cube => {
+        scene.add(cube);
+      });
+
+      scene.add(light);
+
+      renderer.render(scene, camera);
+
+      let time = 0;
+
+      function render(time) {
+        time *= 0.001;  // convert time to seconds
+
+        if (resizeRendererToDisplaySize(renderer)) {
+          camera.aspect = canvas.clientWidth / canvas.clientHeight;
+          camera.updateProjectionMatrix(); // 변경된 비율을 카메라에 적용
+        }
+
+
+        cubes.forEach((cube, ndx) => {
+          const speed = 1 + ndx * .1;
+          const rot = time * speed;
+
+          cube.rotation.x = rot;
+          cube.rotation.y = rot;
+        });
+
+        renderer.render(scene, camera);
+      
+        requestAnimationFrame(render);
+      }
+      requestAnimationFrame(render);
+    }
+
+    main();
+  </script>
+</body>
+</html>
