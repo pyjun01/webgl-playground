@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scnen Graph</title>
+  <style>
+    * { margin: 0;padding: 0;box-sizing: border-box; }
+    html, body {
+      width: 100%;
+      height: 100%;
+    }
+    #c {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="c"></canvas>
+  <script type="module">
+    import * as THREE from 'https://threejsfundamentals.org/threejs/resources/threejs/r127/build/three.module.js';
+    import {GUI} from 'https://threejsfundamentals.org/threejs/../3rdparty/dat.gui.module.js';
+
+    const gui = new GUI();
+
+    const getCamera = () => {
+      const fov = 40;
+      const aspect = 2;
+      const near = 0.1;
+      const far = 1000;
+
+      const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
+      camera.position.set(0, 50, 0);
+      camera.up.set(0, 0, 1);
+      camera.lookAt(0, 0, 0);
+
+      return camera;
+    }
+
+    function resizeRendererToDisplaySize(renderer) {
+      const canvas = renderer.domElement;
+      const pixelRatio = window.devicePixelRatio;
+      const width  = canvas.clientWidth * pixelRatio | 0;
+      const height = canvas.clientHeight * pixelRatio | 0;
+      const needResize = canvas.width !== width || canvas.height !== height;
+
+      if (needResize) {
+        renderer.setSize(width, height, false); // renderer 사이즈를 수정해줌
+      }
+
+      return needResize;
+    }
+
+    class AxisGridHelper {
+      constructor(node, units = 10) {
+        const axes = new THREE.AxesHelper();
+        axes.material.depthTest = false;
+        axes.renderOrder = 2;  // 격자 다음에 렌더링
+        node.add(axes);
+    
+        const grid = new THREE.GridHelper(units, units);
+        grid.material.depthTest = false;
+        grid.renderOrder = 1;
+        node.add(grid);
+    
+        this.grid = grid;
+        this.axes = axes;
+        this.visible = false;
+      }
+      get visible() {
+        return this._visible;
+      }
+      set visible(v) {
+        this._visible = v;
+        this.grid.visible = v;
+        this.axes.visible = v;
+      }
+    }
+
+    const main = () => {
+      const canvas = document.querySelector('#c');
+
+      const renderer = new THREE.WebGLRenderer({ canvas }); // canvas를 넘겨주지 않으면 자동으로 생성해주고 직접 document에 canvas를 삽입해줘야 함
+
+      const camera = getCamera();
+      const scene = new THREE.Scene();
+
+      const objects = [];
+
+      const solarSystem = new THREE.Object3D();
+      const earthOrbit = new THREE.Object3D();
+      earthOrbit.position.x = 10;
+      const moonOrbit = new THREE.Object3D();
+      moonOrbit.position.x = 2;
+
+      const radius = 1;
+      const widthSegments = 100;
+      const heightSegments = 100;
+      const sphereGeometry = new THREE.SphereGeometry(radius, widthSegments, heightSegments);
+
+      const sunMaterial = new THREE.MeshPhongMaterial({ emissive: 0xFFFF00 });
+      const sunMesh = new THREE.Mesh(sphereGeometry, sunMaterial);
+
+      const earthMaterial = new THREE.MeshPhongMaterial({ color: 0x2233ff, emissive: 0x112244 });
+      const earthMesh = new THREE.Mesh(sphereGeometry, earthMaterial);
+
+      const moonMaterial = new THREE.MeshPhongMaterial({ color: 0x888888, emissive: 0x222222 });
+      const moonMesh = new THREE.Mesh(sphereGeometry, moonMaterial);
+      moonMesh.scale.set(.5, .5, .5);
+
+      sunMesh.scale.set(5, 5, 5);
+
+      scene.add(solarSystem);
+      solarSystem.add(sunMesh);
+      solarSystem.add(earthOrbit);
+      earthOrbit.add(earthMesh);
+      earthOrbit.add(moonOrbit);
+      moonOrbit.add(moonMesh);
+
+      objects.push(solarSystem);
+      objects.push(sunMesh);
+      objects.push(earthOrbit);
+      objects.push(earthMesh);
+      objects.push(moonOrbit);
+      objects.push(moonMesh);
+
+      function makeAxisGrid(node, label, units) {
+        const helper = new AxisGridHelper(node, units);
+        gui.add(helper, 'visible').name(label);
+      }
+ 
+      makeAxisGrid(solarSystem, 'solarSystem', 25);
+      makeAxisGrid(sunMesh, 'sunMesh');
+      makeAxisGrid(earthOrbit, 'earthOrbit');
+      makeAxisGrid(earthMesh, 'earthMesh');
+      makeAxisGrid(moonMesh, 'moonMesh');
+
+      {
+        const color = 0xFFFFFF;
+        const intensity = 3;
+        const light = new THREE.PointLight(color, intensity);
+        scene.add(light);
+      }
+
+
+      renderer.render(scene, camera);
+
+      let time = 0;
+
+      function render(time) {
+        time *= 0.001;  // convert time to seconds
+
+        if (resizeRendererToDisplaySize(renderer)) {
+          camera.aspect = canvas.clientWidth / canvas.clientHeight;
+          camera.updateProjectionMatrix(); // 변경된 비율을 카메라에 적용
+        }
+
+        objects.forEach((obj) => {
+          obj.rotation.y = time;
+        });
+
+        renderer.render(scene, camera);
+      
+        requestAnimationFrame(render);
+      }
+      requestAnimationFrame(render);
+    }
+
+    main();
+  </script>
+</body>
+</html>
