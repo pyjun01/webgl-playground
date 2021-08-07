@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scene Tutorial</title>
+  <style>
+    * { margin: 0;padding: 0;box-sizing: border-box; }
+  </style>
+</head>
+<body>
+  <canvas id="c"></canvas>
+  <script type="module">
+    import * as THREE from 'https://threejsfundamentals.org/threejs/resources/threejs/r127/build/three.module.js';
+
+    const canvas = document.querySelector('#c');
+
+    const renderer = new THREE.WebGLRenderer({ canvas });
+
+    renderer.setSize(window.innerWidth, window.innerHeight);
+
+    const camera = new THREE.PerspectiveCamera(75, 2, 0.1, 100);
+
+    camera.position.y = 10;
+    camera.up.set(0, 1, 0);
+    camera.lookAt(0, 0, 0);
+
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+
+    const scene = new THREE.Scene();
+
+    {
+      const light = new THREE.DirectionalLight(0xffffff, 1);
+      light.position.set(-2, 5, -2);
+      scene.add(light);
+    }
+
+    const basic = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+    const lambert = new THREE.MeshLambertMaterial({ color: 0x999999, emissive: 0xff0000 });
+    const phong = new THREE.MeshPhongMaterial({ color: 0x999999, emissive: 0xff0000 });
+
+    const geometry = new THREE.SphereGeometry(1, 100, 100);
+
+    const basicMesh = new THREE.Mesh(geometry, basic);
+    basicMesh.position.x = -4;
+    const lambertMesh = new THREE.Mesh(geometry, lambert);
+    lambertMesh.position.x = 0;
+    const phongMesh = new THREE.Mesh(geometry, phong);
+    phongMesh.position.x = 4;
+
+
+    scene.add(basicMesh);
+    scene.add(lambertMesh);
+    scene.add(phongMesh);
+
+    renderer.render(scene, camera);
+  </script>
+</body>
+</html>
