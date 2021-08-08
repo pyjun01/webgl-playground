@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Texture</title>
+  <style>
+    * { margin: 0;padding: 0;box-sizing: border-box; }
+    html, body {
+      width: 100%;
+      height: 100%;
+    }
+    #c {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="c"></canvas>
+  <script type="module">
+    import * as THREE from 'https://threejsfundamentals.org/threejs/resources/threejs/r127/build/three.module.js';
+    import { OrbitControls } from 'https://threejsfundamentals.org/threejs/resources/threejs/r127/examples/jsm/controls/OrbitControls.js';
+    import { GUI } from 'https://threejsfundamentals.org/threejs/../3rdparty/dat.gui.module.js';
+
+    class ColorGUIHelper {
+      constructor(object, prop) {
+        this.object = object;
+        this.prop = prop;
+      }
+      get value() {
+        return `#${this.object[this.prop].getHexString()}`;
+      }
+      set value(hexString) {
+        this.object[this.prop].set(hexString);
+      }
+    }
+
+    class DegRadHelper {
+      constructor(obj, prop) {
+        this.obj = obj;
+        this.prop = prop;
+      }
+      get value() {
+        return THREE.MathUtils.radToDeg(this.obj[this.prop]);
+      }
+      set value(v) {
+        this.obj[this.prop] = THREE.MathUtils.degToRad(v);
+      }
+    }
+
+    const getCamera = () => {
+      const fov = 45;
+      const aspect = 2;
+      const near = 0.1;
+      const far = 100;
+
+      const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
+      camera.up.set(0, 1, 0);
+      camera.lookAt(0, 0, 0);
+      camera.position.set(0, 10, 20);
+
+      return camera;
+    }
+
+    function resizeRendererToDisplaySize(renderer) {
+      const canvas = renderer.domElement;
+      const pixelRatio = window.devicePixelRatio;
+      const width  = canvas.clientWidth * pixelRatio | 0;
+      const height = canvas.clientHeight * pixelRatio | 0;
+      const needResize = canvas.width !== width || canvas.height !== height;
+
+      if (needResize) {
+        renderer.setSize(width, height, false); // renderer 사이즈를 수정해줌
+      }
+
+      return needResize;
+    }
+
+    const main = () => {
+      const canvas = document.querySelector('#c');
+
+      const renderer = new THREE.WebGLRenderer({ canvas }); // canvas를 넘겨주지 않으면 자동으로 생성해주고 직접 document에 canvas를 삽입해줘야 함
+
+      const camera = getCamera();
+      const scene = new THREE.Scene();
+
+      const controls = new OrbitControls(camera, canvas);
+      controls.target.set(0, 5, 0);
+      controls.update();
+
+      
+      {
+        const planeSize = 40;
+
+        const loader = new THREE.TextureLoader();
+
+        const texture = loader.load('https://threejsfundamentals.org/threejs/resources/images/checker.png');
+        const repeats = planeSize / 2;
+        
+        texture.wrapS = THREE.RepeatWrapping;
+        texture.wrapT = THREE.RepeatWrapping;
+        texture.magFilter = THREE.NearestFilter;
+        texture.repeat.set(repeats, repeats);
+  
+        const geometry = new THREE.PlaneGeometry(planeSize, planeSize);
+        const material = new THREE.MeshPhongMaterial({
+          map: texture,
+          side: THREE.DoubleSide,
+        });
+
+        const mesh = new THREE.Mesh(geometry, material);
+        mesh.rotation.x = Math.PI * -.5;
+        scene.add(mesh);
+      }
+
+      {
+        const cubeSize = 4;
+        const cubeGeo = new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize);
+        const cubeMat = new THREE.MeshPhongMaterial({ color: '#8AC' });
+        const mesh = new THREE.Mesh(cubeGeo, cubeMat);
+        mesh.position.set(cubeSize, cubeSize / 2, 0);
+        scene.add(mesh);
+      }
+
+      {
+        const sphereRadius = 3;
+        const sphereWidthDivisions = 32;
+        const sphereHeightDivisions = 16;
+        const sphereGeo = new THREE.SphereGeometry(sphereRadius, sphereWidthDivisions, sphereHeightDivisions);
+        const sphereMat = new THREE.MeshPhongMaterial({ color: '#CA8' });
+        const mesh = new THREE.Mesh(sphereGeo, sphereMat);
+        mesh.position.set(-sphereRadius - 1, sphereRadius + 2, 0);
+        scene.add(mesh);
+      }
+
+      // { // AmbientLight
+      //   const color = 0xFFFFFF;
+      //   const intensity = 1;
+      //   const light = new THREE.AmbientLight(color, intensity);
+      //   scene.add(light);
+      // }
+
+      // { // HemisphereLight
+      //   const skyColor = 0xb1e1ff;
+      //   const groundColor = 0xb97a20;
+      //   const intensity = 1;
+      //   const light = new THREE.HemisphereLight(skyColor, groundColor, intensity);
+      //   scene.add(light);
+      // }
+
+      // { // DirectionLight With GUI Helper
+      //   const color = 0xffffff;
+      //   const intensity = 1;
+      //   const light = new THREE.DirectionalLight(color, intensity);
+      //   light.position.set(0, 10, 0);
+      //   light.target.position.set(-5, 0, 0);
+      //   scene.add(light);
+      //   scene.add(light.target);
+      //   const helper = new THREE.DirectionalLightHelper(light);
+      //   scene.add(helper);
+      //   const updateLight = () => {
+      //     light.target.updateMatrixWorld();
+      //     helper.update();
+      //   }
+      //   updateLight();
+      //
+      //   const gui = new GUI();
+      //   gui.addColor(new ColorGUIHelper(light, 'color'), 'value').name('color');
+      //   gui.add(light, 'intensity', 0, 2, 0.01);
+      //   const makeXYZGUI = (gui, vector3, name, onChangeFn) => {
+      //     const folder = gui.addFolder(name);
+      //     folder.add(vector3, 'x', -10, 10).onChange(onChangeFn);
+      //     folder.add(vector3, 'y', 0, 10).onChange(onChangeFn);
+      //     folder.add(vector3, 'z', -10, 10).onChange(onChangeFn);
+      //     folder.open();
+      //   }
+      //
+      //   gui.add(light.target.position, 'z', -10, 10);
+      //   gui.add(light.target.position, 'y', 0, 10);
+      //   makeXYZGUI(gui, light.position, 'position', updateLight);
+      //   makeXYZGUI(gui, light.target.position, 'target', updateLight);
+      // }
+
+      // { // PointLight With GUI Helper
+      //   const color = 0xffffff;
+      //   const intensity = 1;
+      //   const light = new THREE.PointLight(color, intensity);
+      //   light.position.set(0, 10, 0);
+      //   scene.add(light);
+      //
+      //   const helper = new THREE.PointLightHelper(light);
+      //   scene.add(helper);
+      //   const updateLight = () => {
+      //     helper.update();
+      //   }
+      //
+      //   const gui = new GUI();
+      //   gui.addColor(new ColorGUIHelper(light, 'color'), 'value').name('color');
+      //   gui.add(light, 'intensity', 0, 2, 0.01);
+      //   gui.add(light, 'distance', 0, 40).onChange(updateLight);
+      //
+      //   const makeXYZGUI = (gui, vector3, name, onChangeFn) => {
+      //     const folder = gui.addFolder(name);
+      //     folder.add(vector3, 'x', -10, 10).onChange(onChangeFn);
+      //     folder.add(vector3, 'y', 0, 10).onChange(onChangeFn);
+      //     folder.add(vector3, 'z', -10, 10).onChange(onChangeFn);
+      //     folder.open();
+      //   }
+      //
+      //   makeXYZGUI(gui, light.position, 'position', updateLight);
+      // }
+
+      // { // SpotLight With GUI Helper
+      //   const color = 0xffffff;
+      //   const intensity = 1;
+      //   const light = new THREE.SpotLight(color, intensity);
+      //   light.position.set(0, 10, 0);
+      //   light.target.position.set(-5, 0, 0);
+      //   scene.add(light);
+      //   scene.add(light.target);
+      //
+      //   const helper = new THREE.SpotLightHelper(light);
+      //   scene.add(helper);
+      //   const updateLight = () => {
+      //     light.target.updateMatrixWorld();
+      //     helper.update();
+      //   }
+      //   updateLight();
+      //
+      //   const gui = new GUI();
+      //   gui.addColor(new ColorGUIHelper(light, 'color'), 'value').name('color');
+      //   gui.add(light, 'intensity', 0, 2, 0.01);
+      //   gui.add(light, 'penumbra', 0, 1, 0.01);
+      //   gui.add(new DegRadHelper(light, 'angle'), 'value', 0, 90).name('angle').onChange(updateLight);
+      //   const makeXYZGUI = (gui, vector3, name, onChangeFn) => {
+      //     const folder = gui.addFolder(name);
+      //     folder.add(vector3, 'x', -10, 10).onChange(onChangeFn);
+      //     folder.add(vector3, 'y', 0, 10).onChange(onChangeFn);
+      //     folder.add(vector3, 'z', -10, 10).onChange(onChangeFn);
+      //     folder.open();
+      //   }
+      //
+      //   gui.add(light.target.position, 'z', -10, 10);
+      //   gui.add(light.target.position, 'y', 0, 10);
+      //   makeXYZGUI(gui, light.position, 'position', updateLight);
+      //   makeXYZGUI(gui, light.target.position, 'target', updateLight);
+      // }
+
+
+
+      renderer.render(scene, camera);
+
+      function render(time) {
+        time *= 0.001;  // convert time to seconds
+
+        if (resizeRendererToDisplaySize(renderer)) {
+          camera.aspect = canvas.clientWidth / canvas.clientHeight;
+          camera.updateProjectionMatrix(); // 변경된 비율을 카메라에 적용
+        }
+
+        renderer.render(scene, camera);
+      
+        requestAnimationFrame(render);
+      }
+      requestAnimationFrame(render);
+    }
+
+    main();
+  </script>
+</body>
+</html>
