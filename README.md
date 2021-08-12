@@ -1,6 +1,6 @@
-# WebGL Tutorial
+# WebGL Playground
 
-WebGL Tutorial을 해보자
+Tutorial
 
 - three.js
 - Vanilla
